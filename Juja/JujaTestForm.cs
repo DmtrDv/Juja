@@ -69,26 +69,56 @@ namespace Juja
 
         /*---------------------------------------------------------------------------------------------------------------------*/
 
-        Timer timer = new Timer();
+        private Timer timer = new Timer();
         // сегменты тела Жужи
-        List<PointF> jujaSegments = new List<PointF>();
+        private List<PointF> jujaSegments = new List<PointF>();
 
-        int segmentsCount = 31; //количество сегментов в Жуже
-        int distanceBetweenSegments = 10; // расстояние между сегментами
+        private int segmentsCount = 31; //количество сегментов в Жуже
+        private int distanceBetweenSegments = 10; // расстояние между сегментами
 
         //действия Жужи
-        public enum Actions
+        public enum JujaActions
         {
             Rotation,
             Following
         }
 
-        Random random = new Random();
+        private Random random = new Random();
 
+        private JujaActions currentAction = JujaActions.Following; //текущее действие Жужы
 
+        private double speedMove = 5;
 
+        public JujaTestForm()
+        {
+            InitializeComponent();
+            // настройка прозрачной формы
+            this.FormBorderStyle = FormBorderStyle.None;
+            this.TopMost = true;
+            this.ShowInTaskbar = false;
+            this.StartPosition = FormStartPosition.Manual;
+            this.Size = new Size(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+            this.Location = new Point(0, 0);
+            this.BackColor = Color.Fuchsia;
+            this.TransparencyKey = Color.Fuchsia;
+            this.DoubleBuffered = true;
 
+            // настройка таймера
+            timer.Tick += Update;
+            timer.Interval = 20;
+            timer.Start();
 
+            // инициализация Жужы
+            for (int i = 0; i <= segmentsCount; i++)
+            {
+                jujaSegments.Add(new PointF(0,0));
+            }
+        }
+
+        public void Update(object sender, EventArgs e)
+        {
+
+        }
 
 
 
@@ -99,14 +129,12 @@ namespace Juja
         /*---------------------------------------------------------------------------------------------------------------------*/
         [DllImport("user32.dll")]
         private static extern bool GetCursorPos(out POINT lpPoint);
-
         [StructLayout(LayoutKind.Sequential)]
         private struct POINT
         {
             public int X;
             public int Y;
         }
-
         // Состояния змейки
         private enum SnakeState { Following, Circling }
         private SnakeState currentState = SnakeState.Following;
