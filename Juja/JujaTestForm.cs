@@ -13,65 +13,12 @@ namespace Juja
 {
     public partial class JujaTestForm: Form
     {
-        /* 
-         public JujaTestForm()
-         {
-             InitializeComponent();
-             // Настройка формы
-             this.FormBorderStyle = FormBorderStyle.None;
-             this.TopMost = true;
-             this.ShowInTaskbar = true;
-             this.StartPosition = FormStartPosition.Manual;
-             this.Size = new Size(100, 125); // размер "объекта"
-             this.BackColor = Color.Red;      // цвет для наглядности
-             // Можно сделать круглую форму через Region (опционально)
-             // Таймер для обновления позиции
-             Timer timer = new Timer();
-             timer.Interval = 30; // 15 мс ≈ 66 FPS
-             timer.Tick += MoveToCursor_Timer_Tick;
-             timer.Start();
-         }
-         private void MoveToCursor_Timer_Tick(object sender, EventArgs e)
-         {
-             GetCursorPos(out POINT cursorPos);
-             int X = cursorPos.X;
-             int Y = cursorPos.Y;
-             int NewPlusX = 5;
-             int NewPlusY = 5;
-
-             if (this.Location.X > cursorPos.X && this.Location.Y > cursorPos.Y)
-             {
-                 this.Location = new Point(this.Location.X - NewPlusX, this.Location.Y - NewPlusY);
-             }
-             else if (this.Location.X < cursorPos.X && this.Location.Y < cursorPos.Y)
-             {
-                 this.Location = new Point(this.Location.X + NewPlusX, this.Location.Y + NewPlusY);
-             }
-             else if (this.Location.X < cursorPos.X && this.Location.Y > cursorPos.Y)
-             {
-                 this.Location = new Point(this.Location.X + NewPlusX, this.Location.Y - NewPlusY);
-             }
-             else
-             {
-                 this.Location = new Point(this.Location.X - NewPlusX, this.Location.Y + NewPlusY);
-             }
-         }
-         // Чтобы форма не исчезала при Alt+Tab, можно переопределить CreateParams
-       /*  protected override CreateParams CreateParams
-         {
-             get
-             {
-                 CreateParams cp = base.CreateParams;
-                 cp.ExStyle |= 0x80; // WS_EX_TOOLWINDOW – не показывать в Alt+Tab
-                 return cp;
-             }
-         }*/
-
         /*---------------------------------------------------------------------------------------------------------------------*/
 
         private Timer timer = new Timer();
+        private int actionTimer = 0;
         // сегменты тела Жужи
-        private List<PointF> jujaSegments = new List<PointF>();
+        private List<Point> jujaSegments = new List<Point>();
 
         private int segmentsCount = 31; //количество сегментов в Жуже
         private int distanceBetweenSegments = 10; // расстояние между сегментами
@@ -83,7 +30,7 @@ namespace Juja
             Following
         }
 
-        private Random random = new Random();
+        private Random randomAction = new Random();
 
         private JujaActions currentAction = JujaActions.Following; //текущее действие Жужы
 
@@ -104,22 +51,58 @@ namespace Juja
             this.DoubleBuffered = true;
 
             // настройка таймера
-            timer.Tick += Update;
             timer.Interval = 20;
+            timer.Tick += Update;
             timer.Start();
 
             // инициализация Жужы
             for (int i = 0; i <= segmentsCount; i++)
             {
-                jujaSegments.Add(new PointF(0,0));
+                jujaSegments.Add(new Point(0,0));
             }
         }
 
         public void Update(object sender, EventArgs e)
         {
+            Point positionOfCursor = Cursor.Position;
+            Point positionHeadJuja = jujaSegments[0];
+            double distanceJujaToCursor = Distance(positionOfCursor, positionHeadJuja);
+
+            actionTimer--;
+            if (actionTimer <= 0)
+            {
+                if (distanceJujaToCursor <= 50)
+                {
+                    currentAction = JujaActions.Rotation;
+                    actionTimer = randomAction.Next(50, 200);
+                }
+                else
+                {
+                    currentAction = JujaActions.Following;
+                    actionTimer = randomAction.Next(50, 200);
+                }
+            }
+
+            switch (currentAction)
+            {
+                case JujaActions.Following:
+                    speedMove = 5;
+                    Point headJuja = jujaSegments[0];
+                    headJuja = new Point(headJuja.X + (int)speedMove, headJuja.Y + (int)speedMove);
+                    break;
+                case JujaActions.Rotation:
+                    speedMove = 3;
+                    break;
+            }
+
 
         }
-
+        public double Distance(Point a, Point b)
+        {
+            double dx = a.X - b.X;
+            double dy = a.Y - b.Y;
+            return Math.Sqrt(dx*dx+dy*dy);
+        }
 
 
 
@@ -127,7 +110,7 @@ namespace Juja
 
 
         /*---------------------------------------------------------------------------------------------------------------------*/
-        [DllImport("user32.dll")]
+        /*[DllImport("user32.dll")]
         private static extern bool GetCursorPos(out POINT lpPoint);
         [StructLayout(LayoutKind.Sequential)]
         private struct POINT
@@ -319,6 +302,6 @@ namespace Juja
             animationTimer?.Stop();
             animationTimer?.Dispose();
             base.OnFormClosing(e);
-        }
+        }*/
     }
 }
