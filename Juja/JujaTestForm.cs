@@ -20,14 +20,16 @@ namespace Juja
         // сегменты тела Жужи
         private List<PointF> jujaSegments = new List<PointF>();
 
-        private int segmentsCount = 31; //количество сегментов в Жуже
+        private int segmentsCount = 41; //количество сегментов в Жуже
         private int distanceBetweenSegments = 8; // расстояние между сегментами
 
         //действия Жужи
         public enum JujaActions
         {
-            Rotation,
-            Following
+            Following,
+            Roam,
+            Runnig,
+            Rotation
         }
 
         private Random randomAction = new Random();
@@ -37,6 +39,7 @@ namespace Juja
         private float speedMove = 5;
 
         PointF laggingCursor = new PointF(110, 110);
+        float animPhase;
 
         public JujaTestForm()
         {
@@ -121,7 +124,7 @@ namespace Juja
                     speedMove = 1;
                     break;
             }
-
+            animPhase += 0.3f;
             Invalidate();
         }
         public float Distance(PointF a, PointF b)
@@ -154,11 +157,23 @@ namespace Juja
                     // отрисовка ног
                     if (i % 3 == 0)
                     {
-                        PointF rightLegPos = new PointF(jujaSegments[i].X + 10, jujaSegments[i].Y - 5);
-                        PointF leftLegPos = new PointF(jujaSegments[i].X - 10, jujaSegments[i].Y + 5);
+                        PointF previousSegment = jujaSegments[i - 1];
+                        float dx = pointOfSegments.X - previousSegment.X;
+                        float dy = pointOfSegments.Y - previousSegment.Y;
 
-                        g.DrawString("/", font, brush, leftLegPos);
+                        // Единичный вектор вперёд (приближённо)
+                        float fx = -dy / distanceBetweenSegments;
+                        float fy = dx / distanceBetweenSegments; 
+
+                        // Базовая длина ноги и анимация шага
+                        float legBase = 10;
+                        float swing = (float)Math.Sin(animPhase + i * 0.5f) * 3f;
+
+                        PointF rightLegPos = new PointF(pointOfSegments.X + fx * legBase + swing, pointOfSegments.Y + fy * legBase);
+                        PointF leftLegPos = new PointF(pointOfSegments.X - fx * legBase - swing, pointOfSegments.Y - fy * legBase);
+
                         g.DrawString("\\", font, brush, rightLegPos);
+                        g.DrawString("/", font, brush, leftLegPos);
                     }
                 }
             }
